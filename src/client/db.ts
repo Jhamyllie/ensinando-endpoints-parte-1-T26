@@ -17,7 +17,7 @@ const db = () => {
       const user = database.find((user) => user.id == id);
 
       if (!user) {
-        message: "informacao nao encontrada";
+        return "Error 404. Not Found!!";
       }
 
       return user;
