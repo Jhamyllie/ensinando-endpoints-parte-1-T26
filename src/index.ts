@@ -1,66 +1,77 @@
 import express from "express";
 import db from "./client/db";
-import { log } from "console";
 
 const app = express();
-// 8080
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Exercicio de CRUD
-// Utilizando as 5 funções encontradas em db, crie 5 endpoints para o recurso "usuario".
-// (Leia em README para saber mais sobre as funções)
-/* 
-    O recurso usuario deve ter as seguintes propriedades com seus respectivos tipos:
-    { 
-        name: String, 
-        email: String, 
-        password: String 
-    }
-*/
-
 // buscar todos - GET /users
 app.get("/user", (_req, res) => {
   const usuarios = db.findAll();
-  res.json(usuarios)
-  // res.send("Estamos aqui");
+  res.status(200).json(usuarios);
 });
 
 // buscar por id - GET /users/:id
 app.get("/user/:id", (req, res) => {
- const id = parseInt(req.params.id);
- const usuarios = db.findById(id)
-   res.json(usuarios)
+  const id = parseInt(req.params.id);
+  const usuarios = db.findById(id);
+  if (!usuarios) {
+    res.status(404).json({ mensagem: "User not found!" });
+  }
+  res.status(200).json(usuarios);
 });
 
-// Criar um usuario - POST /user
+// Criar um usuario - POST/user
 app.post("/user", (req, res) => {
-  let usuario = req.body;
-  let novoUsuario = db.create(usuario);
+  const {name, email, password} = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).send({mensagem: "Todos os campos devem ser preenchidos!"});
+  }
+
+  const criarUsuario = {
+    id: parseInt(""),
+    name: name,
+    email: email,
+    password:password
+  }
+
+  const novoUsuario = db.create(criarUsuario);
   res.status(201).json(novoUsuario);
 });
 
 // Atualizar um usuário - PUT/user/:id
 app.put("/user/:id", (req, res)=> {
   const id = parseInt(req.params.id);
-  const usuario = req.body;
-  const usuarioAtualizado = db.updateById(id, usuario);
-  res.json(usuarioAtualizado);
+  if(!id){
+    return res.status(404).json({mensagem: "Usuário não encontrado."});
+  }
+
+  const {name, email, password} = req.body;
+  if(!name || !email || !password){
+    return res.status(400).json({mensagem: "Todos os campos são obrigatórios"})
+  }
+  const atualizarUsuario = {
+    id: id,
+    name: name,
+    email: email,
+    password: password
+  };
+
+  const usuarioAtualizado = db.updateById(id, atualizarUsuario);
+  res.status(200).json(usuarioAtualizado);
 })
 
 // Excluir um usuário - DELETE/user/id
 app.delete("/user/:id", (req, res)=>{
   const deletar = db.remove(parseInt(req.params.id));
-  res.json(deletar)  
+  res.status(204).json(deletar)  
 });
 
-// app.get("/", (req, res) => {
-//   res.send("Hello World");
-// });
-
-
+app.get("/", (req, res) => {
+  res.end("Hello World");
+});
 
 app.listen(port, () => {
   console.log(`Esse servidor está rodando em ${port}`);
